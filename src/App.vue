@@ -10,11 +10,16 @@
         <h2 class="text-center">Positive</h2>
         <bar-chart
           :chartData="totalCases"
-          :chartLabels="names"
+          :chartLabels="countries"
           :options="chartOptions"
           label="Positive"
         />
       </div>
+      <select v-model="countryVal" @change="increment($event)">
+      <option v-for="country in countries" v-bind:key="country">
+        {{country}}
+      </option>
+      </select>
     </div>
 
   </div>
@@ -32,12 +37,20 @@ export default {
   data() {
     return {
       totalCases: [],
-      regions: [],
+      countries: [],
       chartOptions: {
         responsive: true,
         maintainAspectRatio: false
-      }
+      },
+      countryVal: '',
+      responseAvailable: false,
     };
+  },
+  methods: {
+    increment(event) {
+      this.$store.commit('increment', event.target.value)
+      console.log("STORE",this.$store.state.country)
+    }
   },
   async created() {
     
@@ -50,12 +63,14 @@ export default {
       }
     };
 
-    const { data } = await axios.request(options);
+    const { data } = await axios.request(options)
+      .catch( e => console.error(e));
     const regions = data.data.regions;
     
-    this.names = Object.keys(regions).map(name => name);
-    this.totalCases = this.names.map( name => regions[name].total_cases);
-  
+    this.countries = Object.keys(regions).map(name => name);
+    this.totalCases = this.countries.map( name => regions[name].total_cases);
+
+    this.responseAvailable = true;
   }
 };
 </script>
