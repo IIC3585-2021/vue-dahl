@@ -1,0 +1,6 @@
+// Fetch handlers
+export const FETCH_BAR_CHART_DATA = 'FETCH_BAR_CHART_DATA'
+
+// app handlers
+export const UPDATE_INITIAL_BAR_DATA = 'UPDATE_BAR_CHART_DATA'
+export const ADD_SELECTED_COUNTRY = 'ADD_SELECTED_COUNTRY'

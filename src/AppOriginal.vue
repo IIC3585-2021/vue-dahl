@@ -5,12 +5,12 @@
         <h1 class="text-center">COVID-19 DATA</h1>
       </div>
     </div>
-    <div class="row mt-5" >
+    <div class="row mt-5" v-if="totalCases.length > 0">
       <div class="col">
         <h2 class="text-center">Positive</h2>
         <bar-chart
-          :chartData="this.getSchema"
-          :chartLabels="graphCountries"
+          :chartData="this.$store.state.data"
+          :chartLabels="this.$store.state.countries"
           :options="chartOptions"
           :label="selectChart"
         />
@@ -27,9 +27,9 @@
           </multiselect>
           <multiselect
             v-model="selectedCountries"
-            @select="add($event)"
+            @select="increment($event)"
             @remove="deleteCountry($event)"
-            :options="this.getCountriesFromData"
+            :options="countries"
             :multiple="true"
             :close-on-select="true"
             placeholder="Pick some">
@@ -38,7 +38,7 @@
       </div>
       
       <b-table striped hover
-      :items="this.getSchema"
+      :items="dataFiltered"
       :fields="fields">
       </b-table>
     </div>
@@ -46,8 +46,7 @@
 </template>
 
 <script>
-//import axios from "axios";
-import { mapActions, mapState, mapGetters} from 'vuex'
+import axios from "axios";
 import BarChart from "./components/BarChart";
 import Multiselect from 'vue-multiselect'
 
@@ -56,20 +55,15 @@ export default {
     BarChart,
     Multiselect
   },
-  computed:{
-    ...mapState(['data', 'graphCountries']),
-    ...mapGetters(['getCountriesFromData',
-                   'getSchema'])
-  },
   data() {
     return {
       totalCases: [],
-      countries: this.getCountriesFromData,
+      countries: [],
       chartOptions: {
         responsive: true,
         maintainAspectRatio: false
       },
-      dataFiltered: [this.graphCountries],
+      dataFiltered: [],
       responseAvailable: false,
       countryVal: 'No has seleccionado país',
       fields: [
@@ -96,10 +90,6 @@ export default {
     };
   },
   methods: {
-    ...mapActions(['fetchBarChartData', 'addCountry']),
-    add(event){
-      this.addCountry(event)
-    },
     deleteCountry(event){
       this.$store.commit('deleteCountry', event)
       console.log("STORE", this.$store.state.countries)
@@ -121,7 +111,32 @@ export default {
     }
   },
   async created() {
-    await this.fetchBarChartData();
+    
+    const options = {
+      method: 'GET',
+      url: 'https://coronavirus-map.p.rapidapi.com/v1/summary/latest',
+      headers: {
+        'x-rapidapi-key': '531a08cec7msh94a6d9b4e4a844ep15f8fbjsnb6421a2820ce',
+        'x-rapidapi-host': 'coronavirus-map.p.rapidapi.com'
+      }
+    };
+
+    const { data } = await axios.request(options)
+      .catch( e => console.error(e));
+    const regions = data.data.regions;
+    
+    this.countries = Object.keys(regions).map(name => name);
+    this.totalCases = this.countries.map( name => regions[name].total_cases);
+
+    const schema = Object.keys(regions).map( name => ({
+      name: name, 
+      active_cases: regions[name].active_cases, 
+      deaths: regions[name].deaths, 
+      total_cases: regions[name].total_cases, 
+    }))
+
+    this.$store.commit('setData', schema);
+    this.dataFiltered = this.$store.state.data;
     this.responseAvailable = true;
   },
 };
