@@ -10,7 +10,7 @@
         <h2 class="text-center">Positive</h2>
         <bar-chart
           :chartData="this.$store.state.data"
-          :chartLabels="countries"
+          :chartLabels="this.$store.state.countries"
           :options="chartOptions"
           :label="selectChart"
         />
