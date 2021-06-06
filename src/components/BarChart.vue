@@ -11,7 +11,7 @@ export default {
       type: Array
     },
     chartLabels:{
-      type:Array
+      type: Array
     },
     options: {
       type: Object
@@ -21,13 +21,16 @@ export default {
     // const dates = this.chartData.map(d => d.date).reverse();
     // const totals = this.chartData.map(d => d.total).reverse();
 
+    const names = this.chartData.map(d => d["name"]);
+    const totalCases = this.chartData.map(d => d);
+
     this.renderChart({
-      labels: this.chartLabels.slice(0, 10),
+      labels: names.slice(0, 10),
       datasets: [
         {
-          label: 'Data One',
-          backgroundColor: '#f87979',
-          data: this.chartData.slice(0, 10)
+          label: 'Total de Casos Activos',
+          backgroundColor: "#f87979",
+          data: totalCases.slice(0, 10)
         }
       ]
     }, this.options)

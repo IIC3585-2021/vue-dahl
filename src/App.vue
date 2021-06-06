@@ -15,16 +15,26 @@
           label="Positive"
         />
       </div>
-      <select v-model="countryVal" @change="increment($event)">
-        <option v-for="country in countries" v-bind:key="country">
-          {{country}}
-        </option>
-      </select>
-      <span>Seleccionado: {{ countryVal }}</span>
-      <b-button v-on:click="delete_country">Borrar búsqueda</b-button>
-      <b-table striped hover :items="this.$store.state.data" :filter="this.$store.state.country" :fields="fields"></b-table>
+      <div>
+        <span>Seleccionado: {{ countryVal }}</span>
+        <div>
+          <multiselect
+            v-model="selectedCountries"
+            @select="increment($event)"
+            @remove="deleteCountry($event)"
+            :options="countries"
+            :multiple="true"
+            :close-on-select="true"
+            placeholder="Pick some">
+          </multiselect>
+        </div>
+      </div>
+      
+      <b-table striped hover
+      :items="dataFiltered"
+      :fields="fields">
+      </b-table>
     </div>
-
   </div>
 </template>
 
@@ -32,10 +42,12 @@
 import axios from "axios";
 
 import BarChart from "./components/BarChart";
+import Multiselect from 'vue-multiselect'
 
 export default {
   components: {
-    BarChart
+    BarChart,
+    Multiselect
   },
   data() {
     return {
@@ -45,7 +57,7 @@ export default {
         responsive: true,
         maintainAspectRatio: false
       },
-      data: [],
+      dataFiltered: [],
       responseAvailable: false,
       countryVal: 'No has seleccionado país',
       fields: [
@@ -66,17 +78,26 @@ export default {
             sortable: true,
           }
         ],
+      selectedCountries: [],
     };
   },
   methods: {
-    delete_country(){
-      this.$store.commit('increment', '');
-      this.countryVal = 'No has seleccionado país';
-      console.log('data', this.$store.state.data);
+    deleteCountry(event){
+      this.$store.commit('deleteCountry', event)
+      console.log("STORE", this.$store.state.countries)
+
+      if (this.$store.state.countries.length > 0){
+        this.dataFiltered = this.$store.state.data.filter((x) => this.$store.state.countries.includes(x.name));
+      } else {
+        this.dataFiltered = this.$store.state.data;
+      }
+      console.log('this.dataFiltered', this.dataFiltered);
     },
     increment(event) {
-      this.$store.commit('increment', event.target.value)
-      console.log("STORE",this.$store.state.country)
+      this.$store.commit('addCountry', event);
+      console.log("STORE", this.$store.state.countries);
+      this.dataFiltered = this.$store.state.data.filter((x) => this.$store.state.countries.includes(x.name));
+      console.log('this.dataFiltered', this.dataFiltered);
     }
   },
   async created() {
@@ -105,11 +126,10 @@ export default {
     }))
 
     this.$store.commit('setData', schema);
-
+    this.dataFiltered = this.$store.state.data;
     this.responseAvailable = true;
-  }
+  },
 };
 </script>
 
-<style>
-</style>
+<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>

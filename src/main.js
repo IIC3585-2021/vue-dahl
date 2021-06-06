@@ -13,14 +13,16 @@ Vue.use(BootstrapVue)
 
 const store = new Vuex.Store({
   state: {
-    country: "",
+    countries: [],
     data: {},
     filteredData: {},
-    default: 'No has seleccionado país',
   },
   mutations: {
-    increment (state, name) {
-      state.country = name;
+    addCountry (state, name) {
+      state.countries.push(name);
+    },
+    deleteCountry (state, name) {
+      state.countries = state.countries.filter(e => e !== name);
     },
     setData (state, data) {
       state.data = data
