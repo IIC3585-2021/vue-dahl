@@ -16,10 +16,13 @@
         />
       </div>
       <select v-model="countryVal" @change="increment($event)">
-      <option v-for="country in countries" v-bind:key="country">
-        {{country}}
-      </option>
+        <option v-for="country in countries" v-bind:key="country">
+          {{country}}
+        </option>
       </select>
+      <span>Seleccionado: {{ countryVal }}</span>
+      <b-button v-on:click="delete_country">Borrar búsqueda</b-button>
+      <b-table striped hover :items="this.$store.state.data" :filter="this.$store.state.country" :fields="fields"></b-table>
     </div>
 
   </div>
@@ -42,11 +45,35 @@ export default {
         responsive: true,
         maintainAspectRatio: false
       },
-      countryVal: '',
+      data: [],
       responseAvailable: false,
+      countryVal: 'No has seleccionado país',
+      fields: [
+          {
+            key: 'name',
+            sortable: true
+          },
+          {
+            key: 'active_cases',
+            sortable: true
+          },
+          {
+            key: 'deaths',
+            sortable: true,
+          },
+          {
+            key: 'total_cases',
+            sortable: true,
+          }
+        ],
     };
   },
   methods: {
+    delete_country(){
+      this.$store.commit('increment', '');
+      this.countryVal = 'No has seleccionado país';
+      console.log('data', this.$store.state.data);
+    },
     increment(event) {
       this.$store.commit('increment', event.target.value)
       console.log("STORE",this.$store.state.country)
@@ -69,6 +96,15 @@ export default {
     
     this.countries = Object.keys(regions).map(name => name);
     this.totalCases = this.countries.map( name => regions[name].total_cases);
+
+    const schema = Object.keys(regions).map( name => ({
+      name: name, 
+      active_cases: regions[name].active_cases, 
+      deaths: regions[name].deaths, 
+      total_cases: regions[name].total_cases, 
+    }))
+
+    this.$store.commit('setData', schema);
 
     this.responseAvailable = true;
   }
