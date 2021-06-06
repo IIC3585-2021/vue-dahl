@@ -5,18 +5,19 @@
         <h1 class="text-center">COVID-19 DATA</h1>
       </div>
     </div>
-    <div class="row mt-5" >
-      <div class="col">
-        <h2 class="text-center">Positive</h2>
-        <bar-chart
-          :chartData="this.getSchema"
-          :chartLabels="graphCountries"
-          :options="chartOptions"
-          :label="selectChart"
-        />
+    <div v-if="!fetching">
+      <div class="row mt-5">
+        <div class="col">
+          <h2 class="text-center">Positive</h2>
+          <bar-chart
+            :chartData="this.getSchema"
+            :chartLabels="graphCountries"
+            :options="chartOptions"
+            :label="selectChart"
+          />
+        </div>
       </div>
       <div>
-        <span>Seleccionado: {{ countryVal }}</span>
         <div>
           <multiselect
             v-model="selectChart"
@@ -27,39 +28,42 @@
           </multiselect>
           <multiselect
             v-model="selectedCountries"
-            @select="add($event)"
+            @select="addCountry($event)"
             @remove="deleteCountry($event)"
             :options="this.getCountriesFromData"
             :multiple="true"
             :close-on-select="true"
-            placeholder="Pick some">
+            placeholder="Pick some"
+          >
           </multiselect>
         </div>
       </div>
-      
-      <b-table striped hover
-      :items="this.getSchema"
-      :fields="fields">
+
+      <b-table striped hover :items="this.getSchema" :fields="fields">
       </b-table>
+    </div>
+    <div v-else>
+      <div class="text-center">
+        <b-spinner label="Spinning"></b-spinner>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 //import axios from "axios";
-import { mapActions, mapState, mapGetters} from 'vuex'
+import { mapActions, mapState, mapGetters } from "vuex";
 import BarChart from "./components/BarChart";
-import Multiselect from 'vue-multiselect'
+import Multiselect from "vue-multiselect";
 
 export default {
   components: {
     BarChart,
-    Multiselect
+    Multiselect,
   },
-  computed:{
-    ...mapState(['data', 'graphCountries']),
-    ...mapGetters(['getCountriesFromData',
-                   'getSchema'])
+  computed: {
+    ...mapState(["data", "graphCountries", "selectedChart", "fetching"]),
+    ...mapGetters(["getCountriesFromData", "getSchema"]),
   },
   data() {
     return {
@@ -67,58 +71,40 @@ export default {
       countries: this.getCountriesFromData,
       chartOptions: {
         responsive: true,
-        maintainAspectRatio: false
+        maintainAspectRatio: false,
       },
       dataFiltered: [this.graphCountries],
       responseAvailable: false,
-      countryVal: 'No has seleccionado país',
       fields: [
-          {
-            key: 'name',
-            sortable: true
-          },
-          {
-            key: 'active_cases',
-            sortable: true
-          },
-          {
-            key: 'deaths',
-            sortable: true,
-          },
-          {
-            key: 'total_cases',
-            sortable: true,
-          }
-        ],
+        {
+          key: "name",
+          sortable: true,
+        },
+        {
+          key: "active_cases",
+          sortable: true,
+        },
+        {
+          key: "deaths",
+          sortable: true,
+        },
+        {
+          key: "total_cases",
+          sortable: true,
+        },
+      ],
       selectedCountries: [],
-      selectChart: "total_cases",
+      selectChart: this.$store.state.selectedChart,
       selectOptions: ["total_cases", "active_cases", "deaths"],
     };
   },
   methods: {
-    ...mapActions(['fetchBarChartData', 'addCountry']),
-    add(event){
-      this.addCountry(event)
-    },
-    deleteCountry(event){
-      this.$store.commit('deleteCountry', event)
-      console.log("STORE", this.$store.state.countries)
-
-      if (this.$store.state.countries.length > 0){
-        this.dataFiltered = this.$store.state.data.filter((x) => this.$store.state.countries.includes(x.name));
-      } else {
-        this.dataFiltered = this.$store.state.data;
-      }
-    },
-    increment(event) {
-      this.$store.commit('addCountry', event);
-      console.log("STORE", this.$store.state.countries);
-      this.dataFiltered = this.$store.state.data.filter((x) => this.$store.state.countries.includes(x.name));
-    },
-    changeChart(event) {
-      this.selectChart = event;
-      console.log('this.selectChart', this.selectChart);
-    }
+    ...mapActions([
+      "fetchBarChartData",
+      "addCountry",
+      "deleteCountry",
+      "changeChart",
+    ]),
   },
   async created() {
     await this.fetchBarChartData();

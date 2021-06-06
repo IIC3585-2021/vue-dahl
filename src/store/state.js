@@ -1,5 +1,7 @@
 export default {
-    graphCountries: [],
-    data: {},
-    filteredData: {},
-}
+  graphCountries: [],
+  data: {},
+  filteredData: {},
+  selectedChart: "total_cases",
+  fetching: null,
+};
