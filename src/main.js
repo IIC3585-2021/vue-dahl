@@ -1,33 +1,39 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import { routes } from './routes.js'
-import ElementUI from 'element-ui'
-import 'element-ui/lib/theme-chalk/index.css'
+import Vue from "vue";
 import App from './App.vue'
-import axios from "axios";
+import Vuex from 'vuex'
+import { BootstrapVue } from 'bootstrap-vue'
+import "bootstrap/dist/css/bootstrap.css";
+import 'bootstrap-vue/dist/bootstrap-vue.css'
+
+Vue.config.productionTip = false;
+
+Vue.use(Vuex)
+Vue.use(BootstrapVue)
 
 
-
-const options = {
-  method: 'GET',
-  url: 'https://covid-19-data.p.rapidapi.com/country/all',
-  headers: {
-    'x-rapidapi-key': 'SIGN-UP-FOR-KEY',
-    'x-rapidapi-host': 'covid-19-data.p.rapidapi.com'
+const store = new Vuex.Store({
+  state: {
+    countries: [],
+    data: {},
+    filteredData: {},
+  },
+  mutations: {
+    addCountry (state, name) {
+      state.countries.push(name);
+    },
+    deleteCountry (state, name) {
+      state.countries = state.countries.filter(e => e !== name);
+    },
+    setData (state, data) {
+      state.data = data
+    },
+    filterData(state, country){
+      state.filteredData = state.data.filter(elem => elem.name === country);
+    },
   }
-};
-
-
-Vue.use(ElementUI)
-Vue.use(VueRouter)
-
-const router = new VueRouter({
-  mode: 'history',
-  routes
-});
+})
 
 new Vue({
-  el: '#app',
-  router,
-  render: h => h(App)
-})
+  store,
+  render: (h) => h(App),
+}).$mount("#app");

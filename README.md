@@ -1,26 +1,29 @@
-# vue-chart-starter-kit
-Simple chart page that uses Element UI, Vue Router and Vue Chart
+# Tarea 5
 
-[Demo](https://vuechartstarterkit.firebaseapp.com/)
-
-## Build Setup
-
-``` bash
-# install dependencies
+## Project setup
+```
 npm install
+```
 
-# serve with hot reload at localhost:8080
-npm run dev
+### Compiles and hot-reloads for development
+```
+npm run serve
+```
 
-# build for production with minification
+### Compiles and minifies for production
+```
 npm run build
 ```
 
-## Libraries
-- Vue (2.4.4)
-- Vue Router (3.0.1)
-- Vue Chart-js (3.0.0)
-- Chart.js (2.7.1)
-- Element-Ui (2.0.2)
+### Run your tests
+```
+npm run test
+```
 
-For detailed explanation on how things work, consult the [docs for vue-loader](http://vuejs.github.io/vue-loader).
+### Lints and fixes files
+```
+npm run lint
+```
+
+### Customize configuration
+See [Configuration Reference](https://cli.vuejs.org/config/).

@@ -1,127 +1,146 @@
 <template>
-  <div id="app">
-    <el-row type="flex" class="row-bg" justify="center">
-      <el-radio v-model="radio" label="bar">Bar</el-radio>
-      <el-radio v-model="radio" label="line">Line</el-radio>
-      <el-radio v-model="radio" label="pie">Pie</el-radio>
-      <el-radio v-model="radio" label="bubble">Bubble</el-radio>
-    </el-row>
-    <router-view></router-view>
-    <div>Data: {{data}}</div>
+  <div class="container">
+    <div class="row mt-5">
+      <div class="col">
+        <h1 class="text-center">COVID-19 DATA</h1>
+      </div>
+    </div>
+    <div class="row mt-5" v-if="totalCases.length > 0">
+      <div class="col">
+        <h2 class="text-center">Positive</h2>
+        <bar-chart
+          :chartData="this.$store.state.data"
+          :chartLabels="this.$store.state.countries"
+          :options="chartOptions"
+          :label="selectChart"
+        />
+      </div>
+      <div>
+        <span>Seleccionado: {{ countryVal }}</span>
+        <div>
+          <multiselect
+            v-model="selectChart"
+            mode="multiple"
+            :options="selectOptions"
+            @select="changeChart($event)"
+          >
+          </multiselect>
+          <multiselect
+            v-model="selectedCountries"
+            @select="increment($event)"
+            @remove="deleteCountry($event)"
+            :options="countries"
+            :multiple="true"
+            :close-on-select="true"
+            placeholder="Pick some">
+          </multiselect>
+        </div>
+      </div>
+      
+      <b-table striped hover
+      :items="dataFiltered"
+      :fields="fields">
+      </b-table>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from "axios";
+
+import BarChart from "./components/BarChart";
+import Multiselect from 'vue-multiselect'
+
 export default {
-  name: 'app',
-  data () {
-    return {
-      summary: "",
-      regions: "",
-      bydate:"",
-      data:"",
-      responseAvailable: false,
-      apiKey: '531a08cec7msh94a6d9b4e4a844ep15f8fbjsnb6421a2820ce',
-      radio: ''
-    }
-      
+  components: {
+    BarChart,
+    Multiselect
   },
-  watch: {
-    radio() {
-      this.navigateChart(this.radio);
-    }
+  data() {
+    return {
+      totalCases: [],
+      countries: [],
+      chartOptions: {
+        responsive: true,
+        maintainAspectRatio: false
+      },
+      dataFiltered: [],
+      responseAvailable: false,
+      countryVal: 'No has seleccionado país',
+      fields: [
+          {
+            key: 'name',
+            sortable: true
+          },
+          {
+            key: 'active_cases',
+            sortable: true
+          },
+          {
+            key: 'deaths',
+            sortable: true,
+          },
+          {
+            key: 'total_cases',
+            sortable: true,
+          }
+        ],
+      selectedCountries: [],
+      selectChart: "total_cases",
+      selectOptions: ["total_cases", "active_cases", "deaths"],
+    };
   },
   methods: {
-    navigateChart(url) {
-      this.$router.push(url);
+    deleteCountry(event){
+      this.$store.commit('deleteCountry', event)
+      console.log("STORE", this.$store.state.countries)
+
+      if (this.$store.state.countries.length > 0){
+        this.dataFiltered = this.$store.state.data.filter((x) => this.$store.state.countries.includes(x.name));
+      } else {
+        this.dataFiltered = this.$store.state.data;
+      }
+    },
+    increment(event) {
+      this.$store.commit('addCountry', event);
+      console.log("STORE", this.$store.state.countries);
+      this.dataFiltered = this.$store.state.data.filter((x) => this.$store.state.countries.includes(x.name));
+    },
+    changeChart(event) {
+      this.selectChart = event;
+      console.log('this.selectChart', this.selectChart);
     }
   },
-    created() {
-      console.log('created');
-      this.responseAvailable = false;
-
+  async created() {
+    
     const options = {
-  method: 'GET',
-  url: 'https://coronavirus-map.p.rapidapi.com/v1/summary/latest',
-  headers: {
-    'x-rapidapi-key': '531a08cec7msh94a6d9b4e4a844ep15f8fbjsnb6421a2820ce',
-    'x-rapidapi-host': 'coronavirus-map.p.rapidapi.com'
-  }
-};
-
-    axios.request(options).then((response) => {
-      console.log("First request", response.data);
-      this.summary = response.data.data.summary;
-      this.regions = response.data.data.regions;
-      const names = Object.keys(this.regions)
-      const data = Object.keys(this.regions).map( name => (
-        {
-            name: name, 
-            active_cases: this.regions[name].active_cases, 
-            deaths: this.regions[name].deaths, 
-            total_cases: this.regions[name].total_cases, 
-        }
-       ))
-      console.log(data);
-      this.data = data;
-      const total_cases = Object.keys(this.regions).map( name => (
-              this.regions[name].total_cases
-        ))
-      console.log(total_cases)
-    }).catch(function (error) {
-      console.error(error);
-    });
-      const options2 = {
       method: 'GET',
-      url: 'https://coronavirus-map.p.rapidapi.com/v1/spots/summary',
+      url: 'https://coronavirus-map.p.rapidapi.com/v1/summary/latest',
       headers: {
         'x-rapidapi-key': '531a08cec7msh94a6d9b4e4a844ep15f8fbjsnb6421a2820ce',
         'x-rapidapi-host': 'coronavirus-map.p.rapidapi.com'
       }
     };
 
-    axios.request(options2).then((response) => {
-      console.log("Second request", response.data);
-      this.bydate = response.data.data;
-    }).catch(function (error) {
-      console.error(error);
-    });
-  },
-  mounted() {
-    this.radio = 'bar';
-    this.navigateChart('bar');
-    console.log("mounted!");
-  }
-}
+    const { data } = await axios.request(options)
+      .catch( e => console.error(e));
+    const regions = data.data.regions;
+    
+    this.countries = Object.keys(regions).map(name => name);
+    this.totalCases = this.countries.map( name => regions[name].total_cases);
 
+    const schema = Object.keys(regions).map( name => ({
+      name: name, 
+      active_cases: regions[name].active_cases, 
+      deaths: regions[name].deaths, 
+      total_cases: regions[name].total_cases, 
+    }))
+
+    this.$store.commit('setData', schema);
+    this.dataFiltered = this.$store.state.data;
+    this.responseAvailable = true;
+  },
+};
 </script>
 
-<style>
-.el-row {
-  margin-bottom: 20px;
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-.el-col {
-  border-radius: 4px;
-}
-.bg-purple-dark {
-  background: #99a9bf;
-}
-.bg-purple {
-  background: #d3dce6;
-}
-.bg-purple-light {
-  background: #e5e9f2;
-}
-.grid-content {
-  border-radius: 4px;
-  min-height: 36px;
-}
-.row-bg {
-  padding: 10px 0;
-  background-color: #f9fafc;
-}
-</style>
+<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
