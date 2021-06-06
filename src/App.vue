@@ -9,15 +9,22 @@
       <div class="col">
         <h2 class="text-center">Positive</h2>
         <bar-chart
-          :chartData="totalCases"
+          :chartData="this.$store.state.data"
           :chartLabels="countries"
           :options="chartOptions"
-          label="Positive"
+          :label="selectChart"
         />
       </div>
       <div>
         <span>Seleccionado: {{ countryVal }}</span>
         <div>
+          <multiselect
+            v-model="selectChart"
+            mode="multiple"
+            :options="selectOptions"
+            @select="changeChart($event)"
+          >
+          </multiselect>
           <multiselect
             v-model="selectedCountries"
             @select="increment($event)"
@@ -79,6 +86,8 @@ export default {
           }
         ],
       selectedCountries: [],
+      selectChart: "total_cases",
+      selectOptions: ["total_cases", "active_cases", "deaths"],
     };
   },
   methods: {
@@ -91,13 +100,15 @@ export default {
       } else {
         this.dataFiltered = this.$store.state.data;
       }
-      console.log('this.dataFiltered', this.dataFiltered);
     },
     increment(event) {
       this.$store.commit('addCountry', event);
       console.log("STORE", this.$store.state.countries);
       this.dataFiltered = this.$store.state.data.filter((x) => this.$store.state.countries.includes(x.name));
-      console.log('this.dataFiltered', this.dataFiltered);
+    },
+    changeChart(event) {
+      this.selectChart = event;
+      console.log('this.selectChart', this.selectChart);
     }
   },
   async created() {
