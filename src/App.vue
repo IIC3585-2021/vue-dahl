@@ -39,8 +39,21 @@
         </div>
       </div>
 
-      <b-table striped hover :items="this.getSchema" :fields="fields">
-      </b-table>
+      <div v-if="graphCountries.length > 0">
+        <b-table
+          striped
+          hover
+          :items="
+            this.getSchema.filter((elem) => graphCountries.includes(elem.name))
+          "
+          :fields="fields"
+        >
+        </b-table>
+      </div>
+      <div v-else>
+        <b-table striped hover :items="this.getSchema" :fields="fields">
+        </b-table>
+      </div>
     </div>
     <div v-else>
       <div class="text-center">
